@@ -1,10 +1,11 @@
-# Contribution 1: Google Gemini Model Provider
+# Contribution 2: Google Gemini Model Provider
 
 **Contribution Number:** 2  
 **Student:** Kushal Atul Ramaiya  
 **Issue:** [orthogonalhq/nous-core#71](https://github.com/orthogonalhq/nous-core/issues/71)  
-**Week:** 2  
-**Status:** Phase II In Progress
+**Week:** 4
+
+**Status:** Phase IV Complete
 
 ---
 
@@ -23,7 +24,7 @@ I also chose it because the issue has a clearly defined scope and acceptance cri
 Nous Core supports multiple AI model providers through a shared
 `IModelProvider` interface. However, it does not currently include a provider implementation for Google's Gemini API.
 
-Issue #71 requests a new Gemini provider that follows the patterns used by the existing OpenAI and Ollama providers.
+Issue #71 requests a new Gemini provider that follows the current certified provider-leaf workflow used by the provider adapter surface.
 
 ### Expected Behavior
 
@@ -32,8 +33,10 @@ The completed Gemini provider should:
 - Implement `invoke`, `stream`, and `getConfig`.
 - Validate input with `TextModelInputSchema`.
 - Handle Gemini's streaming API format.
-- Be exported from `self/subcortex/providers/src/index.ts`.
-- Include tests in `self/subcortex/providers/src/__tests__/`.
+- Be registered through the generated provider catalog workflow.
+- Be exported from the provider package public surface.
+- Include tests covering metadata, request formatting, response parsing,
+  streaming, authentication, errors, and provider discovery.
 
 ### Scope Boundary
 
@@ -41,9 +44,12 @@ The issue explicitly states that `IModelProvider` and `TextModelInputSchema` sho
 
 ### Affected Components
 
-- `self/subcortex/providers/src/gemini-provider.ts`
+- `self/subcortex/providers/src/providers/gemini/`
 - `self/subcortex/providers/src/index.ts`
-- `self/subcortex/providers/src/__tests__/`
+- `self/subcortex/providers/src/provider-adapters.ts`
+- `self/subcortex/providers/src/provider-definitions.ts`
+- `self/subcortex/providers/src/provider-factories.ts`
+- `self/subcortex/providers/src/__tests__/providers/gemini.test.ts`
 
 ---
 
@@ -159,13 +165,89 @@ After the API and scope questions are resolved, I plan to:
 9. Run the documented typecheck and provider test suite before opening a pull
    request.
 
-### Current Blockers
+---
 
-- Waiting for clarification on native Gemini API versus Google's
-  OpenAI-compatible endpoint.
-- Waiting for clarification on whether native function calling is in scope.
-- The documented certified provider-leaf workflow is not fully present on the
-  current PR target branch.
+## Week 4 Progress
+
+### Pull Request Submitted
+
+I completed the implementation and opened a draft pull request against the
+maintainer-requested integration branch:
+
+**Pull Request:** [orthogonalhq/nous-core#420](https://github.com/orthogonalhq/nous-core/pull/420)
+
+**PR Target:** `feat/contributor-friendly-inference-provider-surface`
+
+**Working Branch:** `google-gemini-model-provider`
+
+**Commit:** `cbc0fbfa Add Google Gemini provider leaf`
+
+### Contribution Summary
+
+The pull request adds a certified Google Gemini provider leaf under
+`self/subcortex/providers/src/providers/gemini/`.
+
+The implementation includes:
+
+- Gemini provider metadata using `ProviderDefinitionLeaf`.
+- `GEMINI_API_KEY` authentication through `x-goog-api-key`.
+- Native Gemini `generateContent` support for non-streaming requests.
+- Native Gemini `streamGenerateContent?alt=sse` support for streaming.
+- Input validation using the existing `TextModelInputSchema`.
+- Gemini adapter formatting and response parsing.
+- Provider factory wiring.
+- Generated provider catalog updates.
+- Public provider export updates.
+- Tests for provider metadata, adapter formatting/parsing, invoke, streaming,
+  authentication, rate-limit handling, and registry discovery.
+
+### Validation
+
+Before submitting the pull request, I ran:
+
+- `node self/subcortex/providers/scripts/generate-provider-aggregates.mjs --check`
+- Focused Gemini provider tests
+- Documented provider checklist tests
+- Full `self/subcortex/providers` Vitest suite
+- `oxlint` on the touched Gemini and export files
+
+Results:
+
+- Focused Gemini tests: 13 passed
+- Provider checklist tests: 56 passed
+- Full provider test suite: 400 passed, 4 skipped
+- Lint check: 0 warnings, 0 errors
+
+One known note: package typecheck currently reports missing `@nous/shared`
+CLI-session exports on the integration branch. This appears unrelated to the
+Gemini provider changes.
+
+### Maintainer Feedback and Next Steps
+
+I commented on the issue with the PR link and a summary of the implementation:
+
+**Comment:** [Issue comment #4847458823](https://github.com/orthogonalhq/nous-core/issues/71#issuecomment-4847458823)
+
+Current feedback status:
+
+- The issue was assigned to me.
+- The maintainer provided branch and provider-leaf guidance.
+- The PR has been submitted and is awaiting maintainer review.
+- No code-review change requests have been received yet.
+
+Next steps:
+
+- Watch for maintainer feedback on the PR.
+- Respond to questions or requested changes.
+- Push follow-up commits if review feedback requires updates.
+- Mark the PR ready for review when the implementation is ready to leave draft
+  status.
+
+### Phase IV Status
+
+**Status:** Phase IV Complete — PR submitted and README updated.
+
+**Review State:** Awaiting review / feedback.
 
 ---
 
@@ -175,9 +257,55 @@ After the API and scope questions are resolved, I plan to:
 **Repository:** [orthogonalhq/nous-core](https://github.com/orthogonalhq/nous-core)  
 **Issue:** [Adapter: Google Gemini Model Provider](https://github.com/orthogonalhq/nous-core/issues/71)  
 **Issue Status:** Open  
-**Maintainer Feedback:** Updated provider adapter specification and PR target provided  
+**Maintainer Feedback:** Updated provider adapter specification and PR target provided; PR submitted and awaiting review
+
 **Issue Assignment:** Assigned to `ramaiyaKushal`  
-**Current Phase:** Phase II — Reproduce and Plan
+**Current Phase:** Phase IV — Submit and Iterate
+
+---
+
+## Pull Request
+
+**PR Link:** [orthogonalhq/nous-core#420](https://github.com/orthogonalhq/nous-core/pull/420)
+
+**PR Description:**
+
+This pull request adds a certified Google Gemini provider leaf to Nous Core. It
+implements native Gemini text generation and streaming support, wires the
+provider into the generated catalog workflow, exports the provider from the
+package surface, and adds tests for the new provider behavior.
+
+**Maintainer Feedback:**
+
+- The maintainer asked contributors to target
+  `feat/contributor-friendly-inference-provider-surface`.
+- The maintainer clarified that provider leaves should use
+  `ProviderDefinitionLeaf` and should not hand-author `wellKnownProviderId`.
+- No PR review feedback has been received yet.
+
+**Status:** Awaiting review
+
+---
+
+## Learnings & Reflections
+
+### Technical Skills Gained
+
+I learned how provider integrations fit into a shared model-provider
+architecture, including provider metadata, factories, adapters, generated
+catalogs, and streaming response parsing.
+
+### Challenges Overcome
+
+The provider surface changed while I was working on the issue. I had to update
+my branch, discard the older flat-provider approach, and rework the solution to
+match the certified provider-leaf structure requested by the maintainer.
+
+### What I Would Do Differently Next Time
+
+I would verify the current integration branch and contributor docs before
+starting implementation work, especially in a project where the architecture is
+actively being refactored.
 
 ---
 
@@ -189,4 +317,6 @@ After the API and scope questions are resolved, I plan to:
 - [Maintainer update](https://github.com/orthogonalhq/nous-core/issues/71#issuecomment-4644395718)
 - [Provider adapter specification update](https://github.com/orthogonalhq/nous-core/issues/71#issuecomment-4684774025)
 - [My approach and clarification questions](https://github.com/orthogonalhq/nous-core/issues/71#issuecomment-4686274446)
+- [My PR submission comment](https://github.com/orthogonalhq/nous-core/issues/71#issuecomment-4847458823)
+- [Google Gemini provider PR](https://github.com/orthogonalhq/nous-core/pull/420)
 - [Provider adapter contributor documentation](https://docs.nue.orthg.nl/docs/development/provider-adapters)
