@@ -3,9 +3,9 @@
 **Contribution Number:** 2  
 **Student:** Kushal Atul Ramaiya  
 **Issue:** [orthogonalhq/nous-core#71](https://github.com/orthogonalhq/nous-core/issues/71)  
-**Week:** 4
+**Week:** 5
 
-**Status:** Phase IV Complete
+**Status:** Phase IV Complete — Iterating
 
 ---
 
@@ -251,13 +251,113 @@ Next steps:
 
 ---
 
+## Week 5 Check-In
+
+### Current PR Status
+
+The pull request is still open:
+
+**Pull Request:** [orthogonalhq/nous-core#420](https://github.com/orthogonalhq/nous-core/pull/420)
+
+Current status:
+
+- Phase IV is complete because the PR has been submitted and the contribution
+  README has been updated.
+- The PR has moved from initial submission into iteration.
+- I am waiting for maintainer review after addressing the first round of
+  maintainer feedback.
+
+### Maintainer Feedback Addressed
+
+The maintainer confirmed that the native Gemini API path is acceptable for this
+PR:
+
+- Use Gemini `generateContent` / `streamGenerateContent`.
+- Keep the custom Gemini adapter/provider shape.
+- Keep native function calling out of scope until the shared tool bridge exists.
+
+The maintainer also identified one runtime issue:
+
+- The original streaming timeout covered the initial `fetch()` call only.
+- After SSE response headers arrived, `reader.read()` could still block
+  indefinitely if Gemini or a proxy stalled the stream body.
+
+I addressed this by adding bounded timeout and cancellation behavior around
+each streaming body read.
+
+### Updates Made This Week
+
+This week I:
+
+- Added timeout handling around each Gemini SSE `reader.read()` call.
+- Cancelled the stream reader on body-read timeout.
+- Cancelled the stream reader when the caller aborts during body consumption.
+- Added regression tests for stalled post-header SSE streams.
+- Added regression tests for caller abort during streaming body reads.
+- Marked the PR ready for review after fixing the maintainer blocker.
+- Merged the latest `feat/contributor-friendly-inference-provider-surface`
+  branch into my PR branch to resolve provider-roster/catalog conflicts.
+- Updated the PR with a comment summarizing the fix and validation results.
+
+Relevant updates:
+
+- **Streaming timeout fix commit:** `b68287a7 Bound Gemini stream body reads`
+- **Merge conflict resolution commit:** `d3704bd8 Merge remote-tracking branch 'origin/feat/contributor-friendly-inference-provider-surface' into google-gemini-model-provider`
+- **Maintainer feedback response:** [PR comment #4884016494](https://github.com/orthogonalhq/nous-core/pull/420#issuecomment-4884016494)
+- **Merge conflict update:** [PR comment #4884042934](https://github.com/orthogonalhq/nous-core/pull/420#issuecomment-4884042934)
+
+### Validation
+
+After the streaming timeout fix, I ran:
+
+- Gemini focused tests: 15 passed
+- Provider checklist tests: 56 passed
+- Full provider test suite: 402 passed, 4 skipped
+- Gemini `oxlint`: 0 warnings, 0 errors
+- `git diff --check`
+
+After resolving merge conflicts with the updated integration branch, I ran:
+
+- Generated provider check: passed
+- Gemini focused tests: 15 passed
+- Provider checklist tests: 56 passed
+- Full provider suite: 455 passed, 4 skipped
+- Gemini `oxlint`: passed
+- `git diff --check --cached`: passed
+
+Typecheck still reports existing `@nous/shared` CLI-session export errors on
+the integration branch. I am tracking this as an upstream/base-branch issue,
+not a Gemini-provider-specific failure.
+
+### Blockers and Risks
+
+Current blockers or risks:
+
+- The PR is still awaiting maintainer review.
+- GitHub/Vercel shows a Vercel authorization failure that appears unrelated to
+  the code changes.
+- The integration branch is changing quickly, so additional provider roster or
+  generated catalog conflicts may appear again before review is complete.
+
+### Next Steps
+
+Next week I plan to:
+
+- Monitor the PR for maintainer comments.
+- Respond to review feedback within 24 hours when possible.
+- Re-run focused and provider-level tests after any requested changes.
+- Keep the branch aligned with the integration branch if more provider catalog
+  churn lands upstream.
+
+---
+
 ## Project Information
 
 **Project:** Nous Core  
 **Repository:** [orthogonalhq/nous-core](https://github.com/orthogonalhq/nous-core)  
 **Issue:** [Adapter: Google Gemini Model Provider](https://github.com/orthogonalhq/nous-core/issues/71)  
 **Issue Status:** Open  
-**Maintainer Feedback:** Updated provider adapter specification and PR target provided; PR submitted and awaiting review
+**Maintainer Feedback:** Updated provider adapter specification and PR target provided; first maintainer blocker addressed; PR awaiting follow-up review
 
 **Issue Assignment:** Assigned to `ramaiyaKushal`  
 **Current Phase:** Phase IV — Submit and Iterate
@@ -281,9 +381,11 @@ package surface, and adds tests for the new provider behavior.
   `feat/contributor-friendly-inference-provider-surface`.
 - The maintainer clarified that provider leaves should use
   `ProviderDefinitionLeaf` and should not hand-author `wellKnownProviderId`.
-- No PR review feedback has been received yet.
+- The maintainer confirmed the native Gemini API path is acceptable and asked
+  for streaming body-read timeout/cancellation behavior.
+- I addressed the streaming timeout feedback and pushed an updated commit.
 
-**Status:** Awaiting review
+**Status:** Iterating / awaiting follow-up review
 
 ---
 
@@ -319,4 +421,6 @@ actively being refactored.
 - [My approach and clarification questions](https://github.com/orthogonalhq/nous-core/issues/71#issuecomment-4686274446)
 - [My PR submission comment](https://github.com/orthogonalhq/nous-core/issues/71#issuecomment-4847458823)
 - [Google Gemini provider PR](https://github.com/orthogonalhq/nous-core/pull/420)
+- [Streaming timeout fix PR comment](https://github.com/orthogonalhq/nous-core/pull/420#issuecomment-4884016494)
+- [Merge conflict resolution PR comment](https://github.com/orthogonalhq/nous-core/pull/420#issuecomment-4884042934)
 - [Provider adapter contributor documentation](https://docs.nue.orthg.nl/docs/development/provider-adapters)
